@@ -5,6 +5,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -42,6 +43,11 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 	SideViewCameraComponent->OrthoWidth = 2048.0f;
 	SideViewCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 
+	// Create an orthographic camera (no perspective) and attach it to the boom
+	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
+	SphereComponent = AttachTo(RootComponent);
+
+
 	// Prevent all automatic rotation behavior on the camera, character, and camera component
 	CameraBoom->bAbsoluteRotation = true;
 	SideViewCameraComponent->bUsePawnControlRotation = false;
@@ -74,6 +80,8 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 	// Enable replication on the Sprite component so animations show up when networked
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
+
+	State = EPlayerState::IDLE;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -81,14 +89,19 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 
 void ApowerlinesCharacter::UpdateAnimation()
 {
-	const FVector PlayerVelocity = GetVelocity();
-	const float PlayerSpeedSqr = PlayerVelocity.SizeSquared();
-
-	// Are we moving or standing still?
-	UPaperFlipbook* DesiredAnimation = (PlayerSpeedSqr > 0.0f) ? RunningAnimation : IdleAnimation;
-	if( GetSprite()->GetFlipbook() != DesiredAnimation 	)
+	switch (State)
 	{
-		GetSprite()->SetFlipbook(DesiredAnimation);
+	case EPlayerState::IDLE:
+		GetSprite()->SetFlipbook(IdleAnimation);
+		break;
+	case EPlayerState::RUN:
+		GetSprite()->SetFlipbook(RunningAnimation);
+		break;
+	case EPlayerState::JUMP:
+		GetSprite()->SetFlipbook(JumpingAnimation);
+		break;
+	default:
+		GetSprite()->SetFlipbook(IdleAnimation);
 	}
 }
 
@@ -106,12 +119,12 @@ void ApowerlinesCharacter::Tick(float DeltaSeconds)
 void ApowerlinesCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	// Note: the 'Jump' action and the 'MoveRight' axis are bound to actual keys/buttons/sticks in DefaultInput.ini (editable from Project Settings..Input)
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ApowerlinesCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ApowerlinesCharacter::MoveRight);
 
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ApowerlinesCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ApowerlinesCharacter::TouchStopped);
+	PlayerInputComponent->BindAction("Use", IE_Released, this, &ApowerlinesCharacter::Use);
+	PlayerInputComponent->BindAction("Rig", IE_Released, this, &ApowerlinesCharacter::Rig);
 }
 
 void ApowerlinesCharacter::MoveRight(float Value)
@@ -122,27 +135,34 @@ void ApowerlinesCharacter::MoveRight(float Value)
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), Value);
 }
 
-void ApowerlinesCharacter::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)
+void ApowerlinesCharacter::Jump()
 {
-	// Jump on any touch
-	Jump();
+	State = EPlayerState::JUMP;
+	Super::Jump();
 }
 
-void ApowerlinesCharacter::TouchStopped(const ETouchIndex::Type FingerIndex, const FVector Location)
+void ApowerlinesCharacter::Landed(const FHitResult & Hit)
 {
-	// Cease jumping once touch stopped
-	StopJumping();
+	State = EPlayerState::IDLE;
+	Super::Landed(Hit);
 }
 
-void ApowerlinesCharacter::UpdateCharacter()
+void ApowerlinesCharacter::Use()
 {
-	// Update animation to match the motion
-	UpdateAnimation();
+	// Get all overlapping actors
 
+	// Item Specific Handling
+}
+
+void ApowerlinesCharacter::UpdateCharacterState()
+{
 	// Now setup the rotation of the controller based on the direction we are travelling
-	const FVector PlayerVelocity = GetVelocity();	
+	const FVector PlayerVelocity = GetVelocity();
 	float TravelDirection = PlayerVelocity.X;
+	const float PlayerSpeedSqr = PlayerVelocity.SizeSquared();
+
 	// Set the rotation so that the character faces his direction of travel.
+	// This is important as allmost all animations are directional
 	if (Controller != nullptr)
 	{
 		if (TravelDirection < 0.0f)
@@ -154,4 +174,19 @@ void ApowerlinesCharacter::UpdateCharacter()
 			Controller->SetControlRotation(FRotator(0.0f, 0.0f, 0.0f));
 		}
 	}
+
+	// When Jumping we dont want to be running
+	if (State == EPlayerState::JUMP)
+		return;
+
+	State = (PlayerSpeedSqr > 0.0f) ? EPlayerState::RUN : EPlayerState::IDLE;
+	
+}
+
+
+void ApowerlinesCharacter::UpdateCharacter()
+{
+	UpdateCharacterState();
+	// Update animation to match the motion
+	UpdateAnimation();
 }

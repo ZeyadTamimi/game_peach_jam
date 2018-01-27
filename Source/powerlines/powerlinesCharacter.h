@@ -41,6 +41,9 @@ class ApowerlinesCharacter : public APaperCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* InteractionSphere;
+
 	UTextRenderComponent* TextComponent;
 	virtual void Tick(float DeltaSeconds) override;
 protected:
@@ -59,21 +62,31 @@ protected:
 	class UPaperFlipbook* CrouchingAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* KnockBackAnnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* DeadAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
+	EPlayerState State;
+
 	/** Called to choose the correct animation to play based on the character's movement state */
-	void UpdateAnimation();
-
-	/** Called for side to side input */
-	void MoveRight(float Value);
-
 	void UpdateCharacter();
 
-	/** Handle touch inputs. */
-	void TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location);
+	void UpdateCharacterState();
 
-	/** Handle touch stop event. */
-	void TouchStopped(const ETouchIndex::Type FingerIndex, const FVector Location);
+	void UpdateAnimation();
+
+	/** Input Handlers */
+	void MoveRight(float Value);
+
+	virtual void Jump();
+
+	virtual void Landed(const FHitResult & Hit);
+
+	void Use();
+
+	void Rig();
 
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
@@ -86,4 +99,6 @@ public:
 	FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USphereComponent* GetInteractionSphere() const { return InteractionSphere; }
 };
