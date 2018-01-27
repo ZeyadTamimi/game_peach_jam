@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Camera/CameraComponent.h"
+#include "PowerOutlet.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -45,7 +46,7 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 
 	// Create an orthographic camera (no perspective) and attach it to the boom
 	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
-	SphereComponent = AttachTo(RootComponent);
+	InteractionSphere->SetupAttachment(RootComponent);
 
 
 	// Prevent all automatic rotation behavior on the camera, character, and camera component
@@ -81,7 +82,11 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
 
+
+	// Setup Initial player state
 	State = EPlayerState::IDLE;
+	InitialHP = 3;
+	HP = InitialHP;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -148,6 +153,33 @@ void ApowerlinesCharacter::Landed(const FHitResult & Hit)
 }
 
 void ApowerlinesCharacter::Use()
+{
+	// Get all overlapping actors
+	TArray<AActor*> InteractionActors;
+	InteractionSphere->GetOverlappingActors(InteractionActors);
+	// Specific Item handling
+	for (int32 InteractionIndex = 0; InteractionIndex < InteractionActors.Num(); ++InteractionIndex)
+	{
+		APowerOutlet* const InteractionOutlet = Cast<APowerOutlet>(InteractionActors[InteractionIndex]);
+		if (InteractionOutlet && !InteractionOutlet->IsPendingKill())
+		{
+			HandleOutlet(InteractionOutlet);
+		}
+	}
+}
+
+void ApowerlinesCharacter::HandleOutlet(APowerOutlet* const InteractionOutlet)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Touched an outlet"));
+	if (!InteractionOutlet->ConnectedPowerOutlet)
+		return;
+
+	FVector teleportLocation = InteractionOutlet->ConnectedPowerOutlet->GetActorLocation();
+	SetActorLocation(teleportLocation, false);
+}
+
+
+void ApowerlinesCharacter::Rig()
 {
 	// Get all overlapping actors
 

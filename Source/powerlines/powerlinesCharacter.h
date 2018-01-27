@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "PaperCharacter.h"
+#include "PowerOutlet.h"
 #include "powerlinesCharacter.generated.h"
 
 class UTextRenderComponent;
@@ -46,6 +47,10 @@ class ApowerlinesCharacter : public APaperCharacter
 
 	UTextRenderComponent* TextComponent;
 	virtual void Tick(float DeltaSeconds) override;
+
+	UPROPERTY(VisibleAnywhere, Category = "Player State")
+	int HP;
+
 protected:
 	// The animation to play while running around
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
@@ -70,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
 	EPlayerState State;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
+	int InitialHP;
+
 	/** Called to choose the correct animation to play based on the character's movement state */
 	void UpdateCharacter();
 
@@ -85,6 +93,8 @@ protected:
 	virtual void Landed(const FHitResult & Hit);
 
 	void Use();
+
+	void HandleOutlet(APowerOutlet* const InteractionOutlet);
 
 	void Rig();
 
