@@ -11,6 +11,8 @@
 #include "GameFramework/Controller.h"
 #include "Camera/CameraComponent.h"
 #include "PowerOutlet.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Components/AudioComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -48,6 +50,11 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 	InteractionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
 	InteractionSphere->SetupAttachment(RootComponent);
 
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepAudioComp"));
+	AudioComponent->SetRelativeLocation(FVector(100.0f, 0.0f, 0.0f));
+	AudioComponent->SetupAttachment(RootComponent);
+	AudioComponent->bAutoActivate = false; 
+
 
 	// Prevent all automatic rotation behavior on the camera, character, and camera component
 	CameraBoom->bAbsoluteRotation = true;
@@ -77,16 +84,26 @@ ApowerlinesCharacter::ApowerlinesCharacter()
     // 	TextComponent->SetRelativeLocation(FVector(35.0f, 5.0f, 20.0f));
     // 	TextComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
     // 	TextComponent->SetupAttachment(RootComponent);
+	
+	/** Configure Sound Objects */
+	// Load Sound Cue for footsteps
+	//static ConstructorHelpers::FObjectFinder<USoundCue> footstepCue(TEXT("'/Game/PowerLines/Sounds/footsteps.footsteps'"));
+
+	// Store a reference to the Cue asset
+	//footstepAudioCue = footstepCue.Object;
+	
+
+	/** End of sound configuration */
 
 	// Enable replication on the Sprite component so animations show up when networked
 	GetSprite()->SetIsReplicated(true);
 	bReplicates = true;
 
-
 	// Setup Initial player state
 	State = EPlayerState::IDLE;
 	InitialHP = 3;
 	HP = InitialHP;
+	Level = 1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -164,6 +181,7 @@ void ApowerlinesCharacter::Use()
 		if (InteractionOutlet && !InteractionOutlet->IsPendingKill())
 		{
 			HandleOutlet(InteractionOutlet);
+			return;
 		}
 	}
 }
@@ -174,8 +192,12 @@ void ApowerlinesCharacter::HandleOutlet(APowerOutlet* const InteractionOutlet)
 	if (!InteractionOutlet->ConnectedPowerOutlet)
 		return;
 
+	if (!InteractionOutlet->Use(Level))
+		return;
+
 	FVector teleportLocation = InteractionOutlet->ConnectedPowerOutlet->GetActorLocation();
-	SetActorLocation(teleportLocation, false);
+
+	SetActorLocation(teleportLocation, false, nullptr, ETeleportType::TeleportPhysics);
 }
 
 
