@@ -14,7 +14,16 @@ class POWERLINES_API ASecurityGuardController : public AAIController
 {
 	GENERATED_BODY()
 	
-	
-	
-	
+protected:
+	UPROPERTY(EditAnywhere, Category = "AI")
+	UBehaviorTree* BehaviorTree;
+
+	UPROPERTY(EditAnywhere, Category = "AI")
+	UBlackboardData* BlackboardData;
+
+public:
+
+	ASecurityGuardController();
+
+	virtual void BeginPlay() override;
 };
