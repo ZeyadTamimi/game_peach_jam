@@ -87,6 +87,7 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 	State = EPlayerState::IDLE;
 	InitialHP = 3;
 	HP = InitialHP;
+	Level = 1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -164,6 +165,7 @@ void ApowerlinesCharacter::Use()
 		if (InteractionOutlet && !InteractionOutlet->IsPendingKill())
 		{
 			HandleOutlet(InteractionOutlet);
+			return;
 		}
 	}
 }
@@ -174,8 +176,12 @@ void ApowerlinesCharacter::HandleOutlet(APowerOutlet* const InteractionOutlet)
 	if (!InteractionOutlet->ConnectedPowerOutlet)
 		return;
 
+	if (!InteractionOutlet->Use(Level))
+		return;
+
 	FVector teleportLocation = InteractionOutlet->ConnectedPowerOutlet->GetActorLocation();
-	SetActorLocation(teleportLocation, false);
+
+	SetActorLocation(teleportLocation, false, nullptr, ETeleportType::TeleportPhysics);
 }
 
 

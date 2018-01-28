@@ -4,6 +4,8 @@
 #include "Components/BoxComponent.h"
 #include "PaperFlipbookComponent.h"
 #include "EngineUtils.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 
@@ -14,36 +16,63 @@ APowerOutlet::APowerOutlet()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Set component hirerarchy
-	UBoxComponent* PowerOutletRootComponent;
-	PowerOutletRootComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Box Component"));
-	RootComponent = PowerOutletRootComponent;
-
 	FlipbookComponent = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Outlet Animation"));
 	FlipbookComponent->SetupAttachment(RootComponent);
+	RootComponent = FlipbookComponent;
+
+	InteractionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("Interaction Box"));
+	InteractionComponent->SetupAttachment(RootComponent);
+
+	ParticleComponent = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particle System"));
+	ParticleComponent->SetupAttachment(RootComponent);
 
 	// Set up actor state
 	InitialUses = 3;
 	Uses = InitialUses;
 	ConnectedPowerOutlet = NULL;
+	ConnectionNumber = -1;
+	RequieredLevel = 1;
 
 }
 
 // Called when the game starts or when spawned
 void APowerOutlet::BeginPlay()
 {
-
 	// Find the other outlet we are connected to
 	for (TActorIterator<APowerOutlet> ActorItr(GetWorld()); ActorItr; ++ActorItr)
 	{
-		if (*ActorItr != this)
+		if (((*ActorItr)->ConnectionNumber == this->ConnectionNumber) &&
+			(*ActorItr != this))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Found an object"));
 			ConnectedPowerOutlet = *ActorItr;
+			break;
 		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Did not find an object that matches our connection number"));
 	}
-	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("Finished begin play"));
-	
+
+	ParticleComponent->SetTemplate(TeleportationEffect);
+
+	Super::BeginPlay();	
+}
+
+bool APowerOutlet::Use(int level)
+{
+	// Check that the player satisfies all conditions to use the outlet
+	if (!ConnectedPowerOutlet)
+		return false;
+	if (Uses <= 0)
+		return false;
+	if (level < RequieredLevel)
+		return false;
+
+	Uses--;
+	ConnectedPowerOutlet->Uses--;
+
+	ParticleComponent->Activate();
+	ConnectedPowerOutlet->ParticleComponent->Activate();
+
+	return true;
 }
 
 // Called every frame

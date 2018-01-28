@@ -51,6 +51,9 @@ class ApowerlinesCharacter : public APaperCharacter
 	UPROPERTY(VisibleAnywhere, Category = "Player State")
 	int HP;
 
+	UPROPERTY(VisibleAnywhere, Category = "Player State")
+	int Level;
+
 protected:
 	// The animation to play while running around
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Animations)
