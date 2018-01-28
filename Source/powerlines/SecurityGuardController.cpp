@@ -2,6 +2,17 @@
 
 #include "SecurityGuardController.h"
 
+ASecurityGuardController::ASecurityGuardController()
+{
+
+}
+
+void ASecurityGuardController::BeginPlay()
+{
+	RunBehaviorTree(BehaviorTree);
+	Super::BeginPlay();
+}
+
 
 
 

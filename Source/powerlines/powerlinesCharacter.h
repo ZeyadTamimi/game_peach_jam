@@ -45,6 +45,9 @@ class ApowerlinesCharacter : public APaperCharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
 	class USphereComponent* InteractionSphere;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	class UAudioComponent* AudioComponent;
+
 	UTextRenderComponent* TextComponent;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -74,6 +77,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* DeadAnimation;
+
+	/** Audio properties */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	class USoundCue* footstepAudioCue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	class USoundCue* footstepStartupCue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
 	EPlayerState State;
@@ -114,4 +124,6 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USphereComponent* GetInteractionSphere() const { return InteractionSphere; }
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class UAudioComponent* GetAudioComponent() const { return AudioComponent; }
 };
