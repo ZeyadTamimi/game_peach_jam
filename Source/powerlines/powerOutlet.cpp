@@ -2,6 +2,7 @@
 
 #include "PowerOutlet.h"
 #include "Components/BoxComponent.h"
+#include "powerlinesCharacter.h"
 #include "PaperFlipbookComponent.h"
 #include "EngineUtils.h"
 #include "Particles/ParticleSystem.h"
@@ -78,7 +79,22 @@ bool APowerOutlet::Use(int level)
 // Called every frame
 void APowerOutlet::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+	// Get all overlapping actors
+	TArray<AActor*> InteractionActors;
+	InteractionComponent->GetOverlappingActors(InteractionActors);
+	// Specific Item handling
+	for (int32 InteractionIndex = 0; InteractionIndex < InteractionActors.Num(); ++InteractionIndex)
+	{
+		ApowerlinesCharacter* const player = Cast<ApowerlinesCharacter>(InteractionActors[InteractionIndex]);
+		if (player && !player->IsPendingKill() && Uses > 0)
+		{
+			ConnectedPowerOutlet->ParticleComponent->Activate();
+		}
+	}
+	Super::Tick(DeltaTime); 
+	//To DO: Clean up HAcky loop
+	//To Do: Change particles/ change flipbook
+
 
 }
 

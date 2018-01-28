@@ -31,7 +31,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* IdleAnimation;
 
-
 	void UpdateCharacter();
 
 	void UpdateCharacterState();
