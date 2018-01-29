@@ -19,6 +19,9 @@ private:
 
 	bool Alive;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Interaction, meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* BulletSpawnComponent;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
 	EPlayerState State;
@@ -31,15 +34,25 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UPaperFlipbook* IdleAnimation;
 
+	// The animation to play while idle (standing still)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* DeadAnimation;
+
 	void UpdateCharacter();
 
 	void UpdateCharacterState();
 
 	void UpdateAnimation();
 
+	UFUNCTION(BlueprintCallable)
+	void Fire();
+
 	
 public:
 	ASecurityGuardCharacter();
 
 	virtual void Tick(float DeltaSeconds) override;
+
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USphereComponent* GetBulletSpawnComponent() const { return BulletSpawnComponent; }
 };

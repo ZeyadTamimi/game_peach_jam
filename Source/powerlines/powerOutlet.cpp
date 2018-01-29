@@ -33,6 +33,7 @@ APowerOutlet::APowerOutlet()
 	ConnectedPowerOutlet = NULL;
 	ConnectionNumber = -1;
 	RequieredLevel = 1;
+	ShitCodingPractice = false;
 
 }
 
@@ -79,6 +80,7 @@ bool APowerOutlet::Use(int level)
 // Called every frame
 void APowerOutlet::Tick(float DeltaTime)
 {
+	ShitCodingPractice = false;;
 	// Get all overlapping actors
 	TArray<AActor*> InteractionActors;
 	InteractionComponent->GetOverlappingActors(InteractionActors);
@@ -88,9 +90,15 @@ void APowerOutlet::Tick(float DeltaTime)
 		ApowerlinesCharacter* const player = Cast<ApowerlinesCharacter>(InteractionActors[InteractionIndex]);
 		if (player && !player->IsPendingKill() && Uses > 0)
 		{
-			ConnectedPowerOutlet->ParticleComponent->Activate();
+			//ConnectedPowerOutlet->ParticleComponent->Activate();
+			ConnectedPowerOutlet->FlipbookComponent->SetFlipbook(ConnectedPowerOutlet->HighlightAnimation);
+			ShitCodingPractice = true;
 		}
 	}
+
+	if (!ShitCodingPractice)
+		ConnectedPowerOutlet->FlipbookComponent->SetFlipbook(ConnectedPowerOutlet->IdleAnimation);
+
 	Super::Tick(DeltaTime); 
 	//To DO: Clean up HAcky loop
 	//To Do: Change particles/ change flipbook

@@ -2,10 +2,18 @@
 
 #include "SecurityGuardCharacter.h"
 #include "SecurityGuardController.h"
+#include "Components/SphereComponent.h"
+#include "Bullet.h"
+#include "Engine/World.h"
 
 
 ASecurityGuardCharacter::ASecurityGuardCharacter()
 {
+
+	// Create an orthographic camera (no perspective) and attach it to the boom
+	BulletSpawnComponent = CreateDefaultSubobject<USphereComponent>(TEXT("InteractionSphere"));
+	BulletSpawnComponent->SetupAttachment(RootComponent);
+
 	State = EPlayerState::IDLE;
 	Alive = true;
 }
@@ -44,4 +52,10 @@ void ASecurityGuardCharacter::UpdateAnimation()
 	default:
 		GetSprite()->SetFlipbook(IdleAnimation);
 	}
+}
+
+
+void ASecurityGuardCharacter::Fire()
+{
+	GetWorld()->SpawnActor<ABullet>(BulletSpawnComponent->GetComponentToWorld().GetLocation(), GetActorRotation());
 }

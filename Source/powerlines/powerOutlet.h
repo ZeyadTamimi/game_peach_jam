@@ -32,6 +32,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
 	class UParticleSystem* TeleportationEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* IdleAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* UsedAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animations)
+	class UPaperFlipbook* HighlightAnimation;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Actor State")
 	int InitialUses;
 
@@ -42,6 +52,7 @@ protected:
 	int ConnectionNumber;
 public:
 
+	bool ShitCodingPractice;
 	class APowerOutlet* ConnectedPowerOutlet;
 
 	// Sets default values for this actor's properties
