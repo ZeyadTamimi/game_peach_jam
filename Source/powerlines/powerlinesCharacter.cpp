@@ -13,6 +13,7 @@
 #include "PowerOutlet.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 
 DEFINE_LOG_CATEGORY_STATIC(SideScrollerCharacter, Log, All);
 
@@ -101,6 +102,7 @@ ApowerlinesCharacter::ApowerlinesCharacter()
 
 	// Setup Initial player state
 	State = EPlayerState::IDLE;
+	PreviousState = EPlayerState::IDLE;
 	InitialHP = 3;
 	HP = InitialHP;
 	Level = 1;
@@ -127,10 +129,49 @@ void ApowerlinesCharacter::UpdateAnimation()
 	}
 }
 
+void ApowerlinesCharacter::UpdateAudio()
+{
+
+	// Only update audio on change of state
+	if (State == PreviousState)
+		return;
+
+	/* if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
+			FString::Printf(TEXT("State: %s, Prev State: %s"), (char)State, (char)PreviousState)); */
+
+	switch (State)
+	{
+	case EPlayerState::IDLE:
+	{
+		AudioComponent->Stop();
+		break;
+	}
+	case EPlayerState::RUN:
+		AudioComponent->SetSound(FootstepAudioCue);
+		AudioComponent->Play();
+		break;
+	case EPlayerState::JUMP:
+	{	
+		AudioComponent->SetSound(JumpAudioCue);
+		AudioComponent->Play();
+		break;
+	}
+	case EPlayerState::LANDED:
+	{
+		AudioComponent->SetSound(LandAudioCue);
+		AudioComponent->Play();
+		break;
+	}
+	default:
+		AudioComponent->Stop();
+	}
+}
+
 void ApowerlinesCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
 	UpdateCharacter();	
 }
 
@@ -159,13 +200,15 @@ void ApowerlinesCharacter::MoveRight(float Value)
 
 void ApowerlinesCharacter::Jump()
 {
+	PreviousState = State;
 	State = EPlayerState::JUMP;
 	Super::Jump();
 }
 
 void ApowerlinesCharacter::Landed(const FHitResult & Hit)
 {
-	State = EPlayerState::IDLE;
+	PreviousState = State;
+	State = EPlayerState::LANDED;
 	Super::Landed(Hit);
 }
 
@@ -198,6 +241,11 @@ void ApowerlinesCharacter::HandleOutlet(APowerOutlet* const InteractionOutlet)
 	FVector teleportLocation = InteractionOutlet->ConnectedPowerOutlet->GetActorLocation();
 
 	SetActorLocation(teleportLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	PreviousState = EPlayerState::IDLE;
+	State = PreviousState;
+	AudioComponent->SetSound(ZapAudioCue);
+	AudioComponent->Play();
 }
 
 
@@ -206,6 +254,7 @@ void ApowerlinesCharacter::Rig()
 	// Get all overlapping actors
 
 	// Item Specific Handling
+	AudioComponent->Play();
 }
 
 void ApowerlinesCharacter::UpdateCharacterState()
@@ -233,6 +282,7 @@ void ApowerlinesCharacter::UpdateCharacterState()
 	if (State == EPlayerState::JUMP)
 		return;
 
+	UE_LOG(LogTemp, Warning, TEXT("WE ARE RUNNING"));
 	State = (PlayerSpeedSqr > 0.0f) ? EPlayerState::RUN : EPlayerState::IDLE;
 	
 }
@@ -241,6 +291,7 @@ void ApowerlinesCharacter::UpdateCharacterState()
 void ApowerlinesCharacter::UpdateCharacter()
 {
 	UpdateCharacterState();
-	// Update animation to match the motion
 	UpdateAnimation();
+	UpdateAudio();
+	PreviousState = State;
 }

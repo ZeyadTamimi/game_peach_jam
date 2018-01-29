@@ -16,6 +16,7 @@ enum class EPlayerState : uint8
 	RUN 	UMETA(DisplayName = "Run"),
 	IDLE 	UMETA(DisplayName = "Idle"),
 	JUMP	UMETA(DisplayName = "Jump"),
+	LANDED	UMETA(DisplayName = "Landed"),
 	CROUCH  UMETA(DisplayName = "Crouch"),
 	HIT     UMETA(DisplayName = "HIT"),
 	DEAD    UMETA(DisplayName = "Dead")
@@ -80,13 +81,22 @@ protected:
 
 	/** Audio properties */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
-	class USoundCue* footstepAudioCue;
+	class USoundCue* FootstepAudioCue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
-	class USoundCue* footstepStartupCue;
+    class USoundCue* JumpAudioCue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	class USoundCue* LandAudioCue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	class USoundCue* ZapAudioCue;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
 	EPlayerState State;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
+	EPlayerState PreviousState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player State")
 	int InitialHP;
@@ -97,6 +107,8 @@ protected:
 	void UpdateCharacterState();
 
 	void UpdateAnimation();
+
+	void UpdateAudio();
 
 	/** Input Handlers */
 	void MoveRight(float Value);
